@@ -1,5 +1,6 @@
 package com.example.amqp_test.rabbit;
 
+import com.example.amqp_test.AnotherMessageDTO;
 import com.example.amqp_test.MessageDTO;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
@@ -25,7 +26,7 @@ public class TestController {
     @GetMapping("/test-send")
     void send(@RequestParam(name = "exchange") String exchange,
               @RequestParam(name = "routingKey") String routingKey,
-              @RequestParam(name = "message") String payload){
+              @RequestParam(name = "message") String payload) {
         MessageProperties properties = new MessageProperties();
         properties.setMessageId(UUID.randomUUID().toString());
         Message message = new Message(
@@ -36,13 +37,13 @@ public class TestController {
     }
 
     @GetMapping("/test-read")
-    String read(@RequestParam(name = "queue") String queue){
+    String read(@RequestParam(name = "queue") String queue) {
         Message message = rabbitTemplate.receive(queue);
         return new String(message.getBody());
     }
 
     @GetMapping("/send-receive")
-    String sendRec(@RequestParam String payload){
+    String sendRec(@RequestParam String payload) {
         Message request = MessageBuilder.withBody(payload.getBytes())
                 .setReplyTo("out")
                 .build();
@@ -52,9 +53,28 @@ public class TestController {
     }
 
     @GetMapping("/send-with-body")
-    MessageDTO sendObject(@RequestBody MessageDTO messageDTO){
+    MessageDTO sendObject(@RequestBody MessageDTO messageDTO) {
         System.out.printf("In controller: %s%n", messageDTO.toString());
-        MessageDTO received = rabbitTemplate.convertSendAndReceiveAsType("in", messageDTO, ParameterizedTypeReference.forType(MessageDTO.class));
+        MessageDTO received = rabbitTemplate.convertSendAndReceiveAsType("in",
+                messageDTO,
+                message -> {
+                    message.getMessageProperties().setHeader("type", "message");
+                    return message;
+                },
+                ParameterizedTypeReference.forType(MessageDTO.class));
+        System.out.printf("In controller: %s%n", received.toString());
+        return received;
+    }
+
+    @GetMapping("/send-another-message")
+    AnotherMessageDTO sendObject(@RequestBody AnotherMessageDTO anotherMessageDTO) {
+        System.out.printf("In controller: %s%n", anotherMessageDTO.toString());
+        AnotherMessageDTO received = rabbitTemplate.convertSendAndReceiveAsType("in", anotherMessageDTO,
+                message -> {
+                    message.getMessageProperties().setHeader("type", "another_message");
+                    return message;
+                },
+                ParameterizedTypeReference.forType(AnotherMessageDTO.class));
         System.out.printf("In controller: %s%n", received.toString());
         return received;
     }
