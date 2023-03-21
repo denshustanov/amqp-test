@@ -18,7 +18,7 @@ public class RabbitQueueListener {
     @RabbitListener(queues = "in")
     @SendTo("out")
     public MessageDTO handle(MessageDTO messageDTO){
-        System.out.println(messageDTO.toString());
+        System.out.printf("In queue listener: %s%n", messageDTO.toString());
         return messageDTO;
     }
 }

@@ -53,9 +53,9 @@ public class TestController {
 
     @GetMapping("/send-with-body")
     MessageDTO sendObject(@RequestBody MessageDTO messageDTO){
-        System.out.println(messageDTO.toString());
+        System.out.printf("In controller: %s%n", messageDTO.toString());
         MessageDTO received = rabbitTemplate.convertSendAndReceiveAsType("in", messageDTO, ParameterizedTypeReference.forType(MessageDTO.class));
-        System.out.println(received.toString());
+        System.out.printf("In controller: %s%n", received.toString());
         return received;
     }
 }
